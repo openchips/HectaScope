@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 #
-# This file is part of LiteX-Boards.
+# This file is part of FastScope.
 #
-# Copyright (c) 2023 John Simons <jammsimons@gmail.com>
+# Copyright (c) 2023-2024 John Simons <jammsimons@gmail.com>
+# Copyright (C) 2012-2024 Florent Kermarrec <florent@enjoy-digital.fr>
 # SPDX-License-Identifier: BSD-2-Clause
 
 import os
