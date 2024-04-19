@@ -72,8 +72,11 @@ class BaseSoC(SoCCore):
         eth_ip          = "192.168.1.50",
         with_led_chaser = True,
         with_pcie       = False,
+        nlanes          = 4,
         **kwargs):
         platform = alinx_axau15.Platform()
+
+        assert nlanes in [4, 8]
 
         # CRG --------------------------------------------------------------------------------------
         self.crg = _CRG(platform, sys_clk_freq)
@@ -115,8 +118,12 @@ class BaseSoC(SoCCore):
             
 
         adc08dj_phy               = "gth4"
-        adc08dj_phy_rx_order      = [3, 0, 2, 1] #, 7, 4, 6, 5]
-        adc08dj_phy_rx_lane_pol   = [0, 0, 0, 0, 1, 1, 1, 1]  # TODO: pass this to the PHY
+        if nlanes == 4:
+            adc08dj_phy_rx_order      = [3, 0, 2, 1] #, 7, 4, 6, 5]
+            adc08dj_phy_rx_lane_pol   = [0, 0, 0, 0]
+        if nlanes == 8:
+            adc08dj_phy_rx_order      = [3, 0, 2, 1, 7, 4, 6, 5]
+            adc08dj_phy_rx_lane_pol   = [0, 0, 0, 0, 1, 1, 1, 1]  # TODO: pass this to the PHY
         adc08dj_refclk_freq       = 156.25e6
         adc08dj_jesd_linerate     = 6.2500e9
 
@@ -145,7 +152,10 @@ class BaseSoC(SoCCore):
             #ts_tx = JESD204BTransportSettings(f=2, s=1, k=32, cs=0)
             #settings_tx = JESD204BSettings(ps_tx, ts_tx, did=0x5a, bid=0x5, framing=framing, scrambling=scrambling)
 
-            ps_rx = JESD204BPhysicalSettings(l=8, m=4, n=16, np=16)
+            if nlanes == 4:
+                ps_rx = JESD204BPhysicalSettings(l=8, m=4, n=16, np=16)
+            if nlanes == 8:
+                ps_rx = JESD204BPhysicalSettings(l=8, m=8, n=8, np=8)
             ts_rx = JESD204BTransportSettings(f=2, s=1, k=32, cs=0)
             settings_rx = JESD204BSettings(ps_rx, ts_rx, did=0x5a, bid=0x5, framing=framing, scrambling=scrambling)
         else:
