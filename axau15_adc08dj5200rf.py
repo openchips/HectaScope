@@ -199,8 +199,8 @@ class BaseSoC(SoCMini):
         if nlanes == 8:
             adc08dj_phy_rx_order      = [3, 0, 2, 1, 7, 4, 6, 5]
             adc08dj_phy_rx_lane_pol   = [0, 0, 0, 0, 1, 1, 1, 1]  # TODO: pass this to the PHY
-        adc08dj_refclk_freq       = 156.25e6
-        adc08dj_jesd_linerate     = 6.2500e9
+        adc08dj_refclk_freq   = 156.25e6
+        adc08dj_jesd_linerate = 6.2500e9
 
         framing     = True
         scrambling  = True
@@ -244,12 +244,12 @@ class BaseSoC(SoCMini):
         refclk      = Signal()
         refclk_div2 = Signal()
         self.specials += Instance("IBUFDS_GTE4",
+            p_REFCLK_HROW_CK_SEL = 0b01,
             i_CEB   = 0,
             i_I     = refclk_pads.p,
             i_IB    = refclk_pads.n,
             o_O     = refclk,
             o_ODIV2 = refclk_div2)
-
 
         self.submodules.pll = pll = USPMMCM(speedgrade=-2)
         pll.register_clkin(refclk_div2, adc08dj_refclk_freq/2)
@@ -271,7 +271,7 @@ class BaseSoC(SoCMini):
             jesd_tx_pads = platform.request("adc08dj5200rf_jesd_tx", i)
             jesd_rx_pads = platform.request("adc08dj5200rf_jesd_rx", i)
             jesd_phy = GTH4(jesd_pll, jesd_tx_pads, jesd_rx_pads, sys_clk_freq,
-                data_width       = 20, # CHECKME.
+                data_width       = 40,
                 clock_aligner    = False,
                 tx_buffer_enable = True,
                 rx_buffer_enable = True)
