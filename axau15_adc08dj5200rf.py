@@ -58,16 +58,21 @@ class BaseSoC(SoCMini):
     def __init__(self, sys_clk_freq=int(125e6),
         with_led_chaser = True,
         with_pcie       = False,
-        nlanes          = 4):
-        platform = alinx_axau15.Platform()
-
+        nlanes          = 4
+    ):
         assert nlanes in [4, 8]
+
+        # Platform ---------------------------------------------------------------------------------
+        platform = alinx_axau15.Platform()
 
         # CRG --------------------------------------------------------------------------------------
         self.crg = _CRG(platform, sys_clk_freq)
 
         # SoCMini ----------------------------------------------------------------------------------
         SoCMini.__init__(self, platform, sys_clk_freq, ident="FastScope Test SoC on AXAU15.")
+
+        # UARTBone ---------------------------------------------------------------------------------
+        self.add_uartbone()
 
         # PCIe -------------------------------------------------------------------------------------
         if with_pcie:
