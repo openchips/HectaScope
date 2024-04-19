@@ -36,107 +36,100 @@ from litejesd204b.core import LiteJESD204BCoreControl
 # ADC08DJ5200RF FMC IOs ----------------------------------------------------------------------------
 
 adc08dj5200rf_fms_ios = [
+    # GTH Reference Clk (156.25 MHz).
+    # -------------------------------
     ("adc08dj5200rf_refclk", 0,
-        # GTH clock (156.25 MHz)
         Subsignal("p", Pins("HPC:GBTCLK0_M2C_P")),
         Subsignal("n", Pins("HPC:GBTCLK0_M2C_N")),
     ),
+    # GTH RX Lanes.
+    # -------------
     ("adc08dj5200rf_jesd_rx", 0,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP0_M2C_P")),
         Subsignal("n",  Pins("HPC:DP0_M2C_N")),
     ),
     ("adc08dj5200rf_jesd_rx", 1,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP1_M2C_P")),
         Subsignal("n",  Pins("HPC:DP1_M2C_N")),
     ),
     ("adc08dj5200rf_jesd_rx", 2,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP2_M2C_P")),
         Subsignal("n",  Pins("HPC:DP2_M2C_N")),
     ),
     ("adc08dj5200rf_jesd_rx", 3,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP3_M2C_P")),
         Subsignal("n",  Pins("HPC:DP3_M2C_N")),
     ),
     ("adc08dj5200rf_jesd_rx", 4,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP4_M2C_P")),
         Subsignal("n",  Pins("HPC:DP4_M2C_N")),
     ),
     ("adc08dj5200rf_jesd_rx", 5,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP5_M2C_P")),
         Subsignal("n",  Pins("HPC:DP5_M2C_N")),
     ),
     ("adc08dj5200rf_jesd_rx", 6,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP6_M2C_P")),
         Subsignal("n",  Pins("HPC:DP6_M2C_N")),
     ),
     ("adc08dj5200rf_jesd_rx", 7,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP7_M2C_P")),
         Subsignal("n",  Pins("HPC:DP7_M2C_N")),
     ),
+    # GTH TX Lanes (Not used, but still need to be provided to LiteICLink PHY).
+    # -------------------------------------------------------------------------
     ("adc08dj5200rf_jesd_tx", 0,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP0_C2M_P")),
         Subsignal("n",  Pins("HPC:DP0_C2M_N")),
     ),
     ("adc08dj5200rf_jesd_tx", 1,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP1_C2M_P")),
         Subsignal("n",  Pins("HPC:DP1_C2M_N")),
     ),
     ("adc08dj5200rf_jesd_tx", 2,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP2_C2M_P")),
         Subsignal("n",  Pins("HPC:DP2_C2M_N")),
     ),
     ("adc08dj5200rf_jesd_tx", 3,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP3_C2M_P")),
         Subsignal("n",  Pins("HPC:DP3_C2M_N")),
     ),
     ("adc08dj5200rf_jesd_tx", 4,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP4_C2M_P")),
         Subsignal("n",  Pins("HPC:DP4_C2M_N")),
     ),
     ("adc08dj5200rf_jesd_tx", 5,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP5_C2M_P")),
         Subsignal("n",  Pins("HPC:DP5_C2M_N")),
     ),
     ("adc08dj5200rf_jesd_tx", 6,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP6_C2M_P")),
         Subsignal("n",  Pins("HPC:DP6_C2M_N")),
     ),
     ("adc08dj5200rf_jesd_tx", 7,
-        # # GTX data lanes
         Subsignal("p",  Pins("HPC:DP7_C2M_P")),
         Subsignal("n",  Pins("HPC:DP7_C2M_N")),
     ),
 
-    # JSYNC
+    # Jsync.
+    # ------
     ("adc08dj5200rf_sync", 0, Pins("HPC:LA28_P"), IOStandard("LVCMOS18")),
 
-    # SYSREF
+    # SysRef.
+    # -------
     ("adc08dj5200rf_sysref", 0,
         Subsignal("p", Pins("HPC:LA03_P"), IOStandard("LVDS")),
         Subsignal("n", Pins("HPC:LA03_N"), IOStandard("LVDS"))
     ),
 
+    # SPI.
+    # ----
     ("adc08dj5200rf_spi", 0,
-        # TODO: implement this
-        Subsignal("cs_n", Pins("HPC:LA04_N FMC1_HPC:LA05_P")),
-        Subsignal("miso", Pins("HPC:LA04_P"), Misc("PULLUP TRUE")),
-        Subsignal("mosi", Pins("HPC:LA03_N")),
-        Subsignal("clk",  Pins("HPC:LA03_P")),
+        # FIXME: Not yet use in design since configuring ADC through EVM GUI.
+        Subsignal("cs_n",   Pins("HPC:LA04_N FMC1_HPC:LA05_P")),
+        Subsignal("miso",   Pins("HPC:LA04_P"), Misc("PULLUP TRUE")),
+        Subsignal("mosi",   Pins("HPC:LA03_N")),
+        Subsignal("clk",    Pins("HPC:LA03_P")),
         Subsignal("spi_en", Pins("HPC:LA05_N")),
         IOStandard("LVCMOS18")
     ),
