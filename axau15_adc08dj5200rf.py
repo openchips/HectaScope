@@ -238,15 +238,11 @@ class BaseSoC(SoCMini):
 
         # JESD Clocking (Device) -------------------------------------------------------------------
         userclk_freq = adc08dj_jesd_linerate/40 # 6.25GHz / 40 = 156.25 MHz
-        self.clock_domains.cd_jesd_156_25 = ClockDomain()
-        self.clock_domains.cd_jesd_78_125 = ClockDomain()
-        self.clock_domains.cd_jesd        = ClockDomain()
-        self.clock_domains.cd_clk156_25   = ClockDomain()
+        self.cd_jesd = ClockDomain()
 
-        refclk_pads        = platform.request("adc08dj5200rf_refclk")
-        refclk             = Signal()
-        refclk_div2        = Signal()
-
+        refclk_pads = platform.request("adc08dj5200rf_refclk")
+        refclk      = Signal()
+        refclk_div2 = Signal()
         self.specials += Instance("IBUFDS_GTE4",
             i_CEB   = 0,
             i_I     = refclk_pads.p,
@@ -257,18 +253,10 @@ class BaseSoC(SoCMini):
 
         self.submodules.pll = pll = USPMMCM(speedgrade=-2)
         pll.register_clkin(refclk_div2, adc08dj_refclk_freq/2)
-        pll.create_clkout(self.cd_jesd_156_25, userclk_freq,   buf=None, with_reset=False)
-        pll.create_clkout(self.cd_jesd_78_125,  userclk_freq/2, buf=None, with_reset=False)
-        pll.create_clkout(self.cd_clk156_25,   156.25e6, with_reset=False)
-        self.specials += Instance("BUFGMUX",
-            #i_S  = self._speed.storage,
-            i_I0 = ClockSignal("jesd_156_25"),
-            i_I1 = ClockSignal("jesd_78_125"),
-            o_O  = ClockSignal("jesd")
-        )
+        pll.create_clkout(self.cd_jesd, userclk_freq)
         platform.add_period_constraint(refclk_div2, 1e9/(adc08dj_refclk_freq/2))
 
-        # JESD Clocking (SYSREF) -------------------------------------------------------------------
+        # JESD Clocking (SysRef) -------------------------------------------------------------------
         self.sysref = sysref = Signal()
         sysref_pads = platform.request("adc08dj5200rf_sysref")
         self.specials += DifferentialInput(sysref_pads.p, sysref_pads.n, sysref)
@@ -294,7 +282,7 @@ class BaseSoC(SoCMini):
             platform.add_period_constraint(jesd_phy.cd_tx.clk, 1e9/jesd_phy.tx_clk_freq)
             platform.add_period_constraint(jesd_phy.cd_rx.clk, 1e9/jesd_phy.rx_clk_freq)
             platform.add_false_path_constraints(
-                #soc.crg.cd_sys.clk,
+                self.crg.cd_sys.clk,
                 self.cd_jesd.clk,
                 jesd_phy.cd_tx.clk,
                 jesd_phy.cd_rx.clk)
@@ -304,17 +292,7 @@ class BaseSoC(SoCMini):
         jesd_phys_rx_init_done = reduce(and_, [phy.rx_init.done for phy in jesd_phys])
         self.specials += AsyncResetSynchronizer(self.cd_jesd, ~(jesd_phys_tx_init_done & jesd_phys_rx_init_done))
 
-        #jesd_phys_tx = [jesd_phys[n] for n in adc08dj_phy_tx_order]
         jesd_phys_rx = [jesd_phys[n] for n in adc08dj_phy_rx_order]
-
-        # JESD TX ----------------------------------------------------------------------------------
-        #self.submodules.jesd_tx_core    = LiteJESD204BCoreTX(jesd_phys_tx, settings_tx,
-        #    converter_data_width = jesd_lanes*8,
-        #    scrambling           = scrambling,
-        #    stpl_random          = stpl_random)
-        #self.submodules.jesd_tx_control = LiteJESD204BCoreControl(self.jesd_tx_core, sys_clk_freq)
-        #self.jesd_tx_core.register_jsync(adc08dj5200rf_pads.request("adc08dj_sync_tx"))
-        #self.jesd_tx_core.register_jref(sysref)
 
         # JESD RX ----------------------------------------------------------------------------------
         self.submodules.jesd_rx_core    = LiteJESD204BCoreRX(jesd_phys_rx, settings_rx,
@@ -325,7 +303,7 @@ class BaseSoC(SoCMini):
         self.jesd_rx_core.register_jsync(platform.request("adc08dj5200rf_sync"))
         self.jesd_rx_core.register_jref(sysref)
 
-        # JESD Link Status ------------------------------------------------------------------------------
+        # JESD Link Status -------------------------------------------------------------------------
         self.jesd_link_status = Signal()
         self.comb += self.jesd_link_status.eq(
             (self.jesd_rx_core.enable & self.jesd_rx_core.jsync) &
