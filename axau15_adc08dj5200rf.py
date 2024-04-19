@@ -7,6 +7,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 
 import os
+import argparse
 
 from migen import *
 from migen.genlib.resetsync import AsyncResetSynchronizer
@@ -53,12 +54,11 @@ class _CRG(LiteXModule):
 
 # BaseSoC ------------------------------------------------------------------------------------------
 
-class BaseSoC(SoCCore):
+class BaseSoC(SoCMini):
     def __init__(self, sys_clk_freq=int(125e6),
         with_led_chaser = True,
         with_pcie       = False,
-        nlanes          = 4,
-        **kwargs):
+        nlanes          = 4):
         platform = alinx_axau15.Platform()
 
         assert nlanes in [4, 8]
@@ -66,9 +66,8 @@ class BaseSoC(SoCCore):
         # CRG --------------------------------------------------------------------------------------
         self.crg = _CRG(platform, sys_clk_freq)
 
-        # SoCCore ----------------------------------------------------------------------------------
-        kwargs["uart_name"] = "serial"
-        SoCCore.__init__(self, platform, sys_clk_freq, ident="LiteX SoC on AXAU15", **kwargs)
+        # SoCMini ----------------------------------------------------------------------------------
+        SoCMini.__init__(self, platform, sys_clk_freq, ident="FastScope Test SoC on AXAU15.")
 
         # PCIe -------------------------------------------------------------------------------------
         if with_pcie:
@@ -84,8 +83,6 @@ class BaseSoC(SoCCore):
                 pads         = platform.request_all("user_led"),
                 sys_clk_freq = sys_clk_freq)
             
-
-
         #JESD204B
             
         adc08dj_phy               = "gth4"
@@ -359,24 +356,20 @@ class BaseSoC(SoCCore):
 # Build --------------------------------------------------------------------------------------------
 
 def main():
-    from litex.build.parser import LiteXArgumentParser
-    parser = LiteXArgumentParser(platform=alinx_axau15.Platform, description="LiteX SoC on AXAU15.")
-    parser.add_target_argument("--sys-clk-freq",    default=125e6, type=float, help="System clock frequency.")
-    parser.add_argument("--driver", action="store_true", help="Generate LitePCIe driver")
+    parser = argparse.ArgumentParser(description="FastScope Test SoC on AXAU15.")
+    parser.add_argument("--build",           action ="store_true",      help="Build bitstream.")
+    parser.add_argument("--load",            action ="store_true",      help="Load bitstream.")
+    parser.add_argument("--sys-clk-freq",    default=125e6, type=float, help="System clock frequency.")
+    parser.add_argument("--driver",          action="store_true",       help="Generate LitePCIe driver.")
     args = parser.parse_args()
 
-    #assert not (args.with_etherbone and args.eth_dynamic_ip)
-
     soc = BaseSoC(
-        sys_clk_freq    = args.sys_clk_freq,
-        **parser.soc_argdict
+        sys_clk_freq = args.sys_clk_freq,
 	)
 
-    soc.add_sdcard()
-
-    builder = Builder(soc, **parser.builder_argdict)
+    builder = Builder(soc, csr_csv="csr.csv")
     if args.build:
-        builder.build(**parser.toolchain_argdict)
+        builder.build()
 
     if args.driver:
         generate_litepcie_software(soc, os.path.join(builder.output_dir, "driver"))
