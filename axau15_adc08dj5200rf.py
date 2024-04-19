@@ -9,11 +9,9 @@
 import os
 
 from migen import *
-
-from litex.gen import *
 from migen.genlib.resetsync import AsyncResetSynchronizer
 
-
+from litex.gen import *
 
 from litex_boards.platforms import alinx_axau15
 from litex.build.generic_platform import *
@@ -26,17 +24,13 @@ from litex.soc.cores.led import LedChaser
 
 from liteiclink.serdes.gth4_ultrascale import GTH4QuadPLL, GTH4
 
-from litedram.phy import usddrphy
-
 from litepcie.phy.usppciephy import USPPCIEPHY
 from litepcie.software import generate_litepcie_software
-
 
 from litejesd204b.common import *
 from litejesd204b.core import LiteJESD204BCoreTX
 from litejesd204b.core import LiteJESD204BCoreRX
 from litejesd204b.core import LiteJESD204BCoreControl
-
 
 # CRG ----------------------------------------------------------------------------------------------
 
@@ -61,9 +55,6 @@ class _CRG(LiteXModule):
 
 class BaseSoC(SoCCore):
     def __init__(self, sys_clk_freq=int(125e6),
-        with_ethernet   = False,
-        with_etherbone  = False,
-        eth_ip          = "192.168.1.50",
         with_led_chaser = True,
         with_pcie       = False,
         nlanes          = 4,
@@ -372,22 +363,12 @@ def main():
     parser = LiteXArgumentParser(platform=alinx_axau15.Platform, description="LiteX SoC on AXAU15.")
     parser.add_target_argument("--sys-clk-freq",    default=125e6, type=float, help="System clock frequency.")
     parser.add_argument("--driver", action="store_true", help="Generate LitePCIe driver")
-
-    #ethopts = parser.target_group.add_mutually_exclusive_group()
-    #ethopts.add_argument("--with-ethernet",        action="store_true",    help="Enable Ethernet support.")
-    #ethopts.add_argument("--with-etherbone",       action="store_true",    help="Enable Etherbone support.")
-    #parser.add_target_argument("--eth-ip",         default="192.168.1.50", help="Ethernet/Etherbone IP address.")
-    #parser.add_target_argument("--eth-dynamic-ip", action="store_true",    help="Enable dynamic Ethernet IP addresses setting.")
     args = parser.parse_args()
 
     #assert not (args.with_etherbone and args.eth_dynamic_ip)
 
     soc = BaseSoC(
         sys_clk_freq    = args.sys_clk_freq,
-        #with_ethernet  = args.with_ethernet,
-        #with_etherbone = args.with_etherbone,
-        #eth_ip         = args.eth_ip,
-        #eth_dynamic_ip = args.eth_dynamic_ip,
         **parser.soc_argdict
 	)
 
