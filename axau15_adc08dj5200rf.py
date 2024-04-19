@@ -33,6 +33,8 @@ from litejesd204b.core import LiteJESD204BCoreTX
 from litejesd204b.core import LiteJESD204BCoreRX
 from litejesd204b.core import LiteJESD204BCoreControl
 
+from litescope import LiteScopeAnalyzer
+
 # ADC08DJ5200RF FMC IOs ----------------------------------------------------------------------------
 
 adc08dj5200rf_fms_ios = [
@@ -288,7 +290,27 @@ class BaseSoC(SoCMini):
         self.comb += self.jesd_link_status.eq(
             (self.jesd_rx_core.enable & self.jesd_rx_core.jsync) &
             (self.jesd_rx_core.enable & self.jesd_rx_core.jsync))
-            
+
+    # Analyzer -------------------------------------------------------------------------------------
+
+    def add_jesd_rx_probe(self, depth=512):
+        analyzer_signals = [
+            self.jesd_rx_core.jsync,
+            self.jesd_rx_core.jref,
+        ]
+        for link in self.jesd_rx_core.links:
+            analyzer_signals.append(link.aligner.source)
+            analyzer_signals.append(link.fsm)
+            analyzer_signals.append(link.ilas.valid)
+            analyzer_signals.append(link.ilas.done)
+        analyzer_signals.append(self.jesd_rx_core.transport.source)
+        self.analyzer = LiteScopeAnalyzer(analyzer_signals,
+            depth        = depth,
+            clock_domain = "jesd",
+            csr_csv      = "analyzer.csv",
+            register     = True,
+        )
+
 # Build --------------------------------------------------------------------------------------------
 
 def main():
@@ -302,6 +324,7 @@ def main():
     soc = BaseSoC(
         sys_clk_freq = args.sys_clk_freq,
 	)
+    soc.add_jesd_rx_probe()
 
     builder = Builder(soc, csr_csv="csr.csv")
     if args.build:
