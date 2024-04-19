@@ -76,7 +76,7 @@ adc08dj5200rf_fms_ios = [
         Subsignal("p",  Pins("HPC:DP7_M2C_P")),
         Subsignal("n",  Pins("HPC:DP7_M2C_N")),
     ),
-    # GTH TX Lanes (Not used, but still need to be provided to LiteICLink PHY).
+    # GTH TX Lanes.(Not used, but still need to be provided to LiteICLink PHY).
     # -------------------------------------------------------------------------
     ("adc08dj5200rf_jesd_tx", 0,
         Subsignal("p",  Pins("HPC:DP0_C2M_P")),
@@ -191,9 +191,8 @@ class BaseSoC(SoCMini):
                 pads         = platform.request_all("user_led"),
                 sys_clk_freq = sys_clk_freq)
             
-        #JESD204B
-            
-        adc08dj_phy               = "gth4"
+        # JESD204B ---------------------------------------------------------------------------------
+
         if nlanes == 4:
             adc08dj_phy_rx_order      = [3, 0, 2, 1] #, 7, 4, 6, 5]
             adc08dj_phy_rx_lane_pol   = [0, 0, 0, 0]
@@ -203,8 +202,8 @@ class BaseSoC(SoCMini):
         adc08dj_refclk_freq       = 156.25e6
         adc08dj_jesd_linerate     = 6.2500e9
 
-        framing = True
-        scrambling = True
+        framing     = True
+        scrambling  = True
         stpl_random = False
 
         # JESD Configuration -----------------------------------------------------------------------
@@ -275,32 +274,16 @@ class BaseSoC(SoCMini):
         self.specials += DifferentialInput(sysref_pads.p, sysref_pads.n, sysref)
 
         # JESD PHYs --------------------------------------------------------------------------------
-        jesd_pll_cls = {
-            "gth4": GTH4QuadPLL,
-            #"gtx": GTXQuadPLL,
-            #"gtp": GTPQuadPLL,
-        }[adc08dj_phy]
-        jesd_phy_cls = {
-            "gth4": GTH4
-            #"gtx": GTX,
-            #"gtp": GTP,
-        }[adc08dj_phy]
-        jesd_phy_data_width = {
-             "gth4": 20, # 40?
-            #"gtx": 20,
-            #"gtp": 20,
-        }[adc08dj_phy]
-
-        jesd_pll = jesd_pll_cls(refclk, adc08dj_refclk_freq, adc08dj_jesd_linerate)
+        jesd_pll = GTH4QuadPLL(refclk, adc08dj_refclk_freq, adc08dj_jesd_linerate)
         self.submodules += jesd_pll
-        #print(jesd_pll)
+        print(jesd_pll)
 
         self.jesd_phys = jesd_phys = []
         for i in range(jesd_lanes):
             jesd_tx_pads = platform.request("adc08dj5200rf_jesd_tx", i)
             jesd_rx_pads = platform.request("adc08dj5200rf_jesd_rx", i)
-            jesd_phy = jesd_phy_cls(jesd_pll, jesd_tx_pads, jesd_rx_pads, sys_clk_freq,
-                data_width       = jesd_phy_data_width,
+            jesd_phy = GTH4(jesd_pll, jesd_tx_pads, jesd_rx_pads, sys_clk_freq,
+                data_width       = 20, # CHECKME.
                 clock_aligner    = False,
                 tx_buffer_enable = True,
                 rx_buffer_enable = True)
@@ -348,9 +331,6 @@ class BaseSoC(SoCMini):
             (self.jesd_rx_core.enable & self.jesd_rx_core.jsync) &
             (self.jesd_rx_core.enable & self.jesd_rx_core.jsync))
             
-
-        
-
 # Build --------------------------------------------------------------------------------------------
 
 def main():
