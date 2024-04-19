@@ -24,8 +24,6 @@ from litex.soc.integration.soc_core import *
 from litex.soc.integration.builder import *
 from litex.soc.cores.led import LedChaser
 
-from litedram.modules import MT40A512M16
-
 from liteiclink.serdes.gth4_ultrascale import GTH4QuadPLL, GTH4
 
 from litedram.phy import usddrphy
@@ -46,8 +44,6 @@ class _CRG(LiteXModule):
     def __init__(self, platform, sys_clk_freq):
         self.rst       = Signal()
         self.cd_sys    = ClockDomain()
-        self.cd_sys4x  = ClockDomain()
-        self.cd_idelay = ClockDomain()
 
         # # #
 
@@ -58,10 +54,8 @@ class _CRG(LiteXModule):
         self.pll = pll = USMMCM(speedgrade=-2)
         self.comb += pll.reset.eq(self.rst)
         pll.register_clkin(clk200, 200e6)
-        pll.create_clkout(self.cd_sys,    sys_clk_freq, with_reset=False)
-        pll.create_clkout(self.cd_sys4x,  4*sys_clk_freq)
+        pll.create_clkout(self.cd_sys, sys_clk_freq, with_reset=False)
         platform.add_false_path_constraints(self.cd_sys.clk, pll.clkin) # Ignore sys_clk to pll.clkin path created by SoC's rst.
-        self.idelayctrl = USIDELAYCTRL(cd_ref=self.cd_sys4x, cd_sys=self.cd_sys)
 
 # BaseSoC ------------------------------------------------------------------------------------------
 
@@ -85,19 +79,6 @@ class BaseSoC(SoCCore):
         kwargs["uart_name"] = "serial"
         SoCCore.__init__(self, platform, sys_clk_freq, ident="LiteX SoC on AXAU15", **kwargs)
 
-        # DDR4 SDRAM -------------------------------------------------------------------------------
-        if not self.integrated_main_ram_size:
-            self.ddrphy = usddrphy.USPDDRPHY(platform.request("ddram"),
-                memtype          = "DDR4",
-                sys_clk_freq     = sys_clk_freq,
-                iodelay_clk_freq = 500e6)
-            self.add_sdram("sdram",
-                phy           = self.ddrphy,
-                module        = MT40A512M16(sys_clk_freq, "1:4"),
-                size          = 0x40000000,
-                l2_cache_size = kwargs.get("l2_size", 8192)
-            )
-
         # PCIe -------------------------------------------------------------------------------------
         if with_pcie:
             self.pcie_phy = USPPCIEPHY(platform, platform.request("pcie_x4"),
@@ -116,7 +97,6 @@ class BaseSoC(SoCCore):
 
         #JESD204B
             
-
         adc08dj_phy               = "gth4"
         if nlanes == 4:
             adc08dj_phy_rx_order      = [3, 0, 2, 1] #, 7, 4, 6, 5]
