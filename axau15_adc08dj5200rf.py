@@ -196,11 +196,11 @@ class BaseSoC(SoCMini):
         # JESD204B ---------------------------------------------------------------------------------
 
         if nlanes == 4:
-            adc08dj_phy_rx_order      = [3, 0, 2, 1] #, 7, 4, 6, 5]
-            adc08dj_phy_rx_lane_pol   = [0, 0, 0, 0]
+            adc08dj_phy_rx_order    = [3, 0, 2, 1]
+            adc08dj_phy_rx_polarity = [0, 0, 0, 0]
         if nlanes == 8:
-            adc08dj_phy_rx_order      = [3, 0, 2, 1, 7, 4, 6, 5]
-            adc08dj_phy_rx_lane_pol   = [0, 0, 0, 0, 1, 1, 1, 1]  # TODO: pass this to the PHY
+            adc08dj_phy_rx_order    = [3, 0, 2, 1, 7, 4, 6, 5]
+            adc08dj_phy_rx_polarity = [0, 0, 0, 0, 1, 1, 1, 1]
         adc08dj_refclk_freq   = 156.25e6
         adc08dj_jesd_linerate = 6.2500e9
 
@@ -256,7 +256,9 @@ class BaseSoC(SoCMini):
                 data_width       = 40,
                 clock_aligner    = False,
                 tx_buffer_enable = True,
-                rx_buffer_enable = True)
+                rx_buffer_enable = True,
+                tx_polarity      = 0,
+                rx_polarity      = adc08dj_phy_rx_polarity)
             jesd_phy.add_stream_endpoints()
             jesd_phy.add_controls(auto_enable=False)
             jesd_phy.n = i
