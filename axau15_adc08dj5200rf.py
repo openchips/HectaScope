@@ -209,32 +209,12 @@ class BaseSoC(SoCMini):
         # JESD Configuration -----------------------------------------------------------------------
         jesd_lanes = len(adc08dj_phy_rx_order)
 
-        # 2 lanes / 4 converters / (4.9152Gbps linerate : IQ rate 61.44MSPS)
-        if jesd_lanes == 2:
-            raise NotImplementedError
-        # 4 lanes / 4 converters / (2.4576Gbps linerate : IQ rate 122.88MSPS)
-        elif jesd_lanes == 4:
-            ps_tx = JESD204BPhysicalSettings(l=4, m=4, n=8, np=8)
-            ts_tx = JESD204BTransportSettings(f=2, s=1, k=32, cs=0)
-            settings_tx = JESD204BSettings(ps_tx, ts_tx, did=0x5a, bid=0x5, framing=framing, scrambling=scrambling)
-
-            ps_rx = JESD204BPhysicalSettings(l=4, m=4, n=8, np=8)
-            ts_rx = JESD204BTransportSettings(f=2, s=1, k=32, cs=0)
-            settings_rx = JESD204BSettings(ps_rx, ts_rx, did=0x5a, bid=0x5, framing=framing, scrambling=scrambling)
-         # 8 lanes / 8 converters / (6.25Gbps linerate)
-        elif jesd_lanes == 8:
-            #ps_tx = JESD204BPhysicalSettings(l=8, m=4, n=16, np=16)
-            #ts_tx = JESD204BTransportSettings(f=2, s=1, k=32, cs=0)
-            #settings_tx = JESD204BSettings(ps_tx, ts_tx, did=0x5a, bid=0x5, framing=framing, scrambling=scrambling)
-
-            if nlanes == 4:
-                ps_rx = JESD204BPhysicalSettings(l=8, m=4, n=16, np=16)
-            if nlanes == 8:
-                ps_rx = JESD204BPhysicalSettings(l=8, m=8, n=8, np=8)
-            ts_rx = JESD204BTransportSettings(f=2, s=1, k=32, cs=0)
-            settings_rx = JESD204BSettings(ps_rx, ts_rx, did=0x5a, bid=0x5, framing=framing, scrambling=scrambling)
-        else:
-            raise NotImplementedError
+        if nlanes == 4:
+            ps_rx = JESD204BPhysicalSettings(l=8, m=4, n=16, np=16)
+        if nlanes == 8:
+            ps_rx = JESD204BPhysicalSettings(l=8, m=8, n=8, np=8)
+        ts_rx = JESD204BTransportSettings(f=2, s=1, k=32, cs=0)
+        settings_rx = JESD204BSettings(ps_rx, ts_rx, did=0x5a, bid=0x5, framing=framing, scrambling=scrambling)
 
         # JESD Clocking (Device) -------------------------------------------------------------------
         userclk_freq = adc08dj_jesd_linerate/40 # 6.25GHz / 40 = 156.25 MHz
