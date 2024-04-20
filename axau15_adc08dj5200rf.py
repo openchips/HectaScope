@@ -213,7 +213,7 @@ class BaseSoC(SoCMini):
         jesd_lanes = len(adc08dj_phy_rx_order)
 
         if nlanes == 4:
-            ps_rx = JESD204BPhysicalSettings(l=8, m=4, n=16, np=16)
+            ps_rx = JESD204BPhysicalSettings(l=8, m=4, n=8, np=8)
         if nlanes == 8:
             ps_rx = JESD204BPhysicalSettings(l=8, m=8, n=8, np=8)
         ts_rx = JESD204BTransportSettings(f=2, s=1, k=32, cs=0)
