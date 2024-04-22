@@ -161,11 +161,14 @@ class _CRG(LiteXModule):
 
 class BaseSoC(SoCMini):
     def __init__(self, sys_clk_freq=int(125e6),
-        with_led_chaser = True,
-        with_pcie       = False,
-        nlanes          = 4
+        with_led_chaser  = True,
+        with_pcie        = False,
+        jesd_lanes       = 4,
+        jesd_framing     = True,
+        jesd_scrambling  = True,
+        jesd_stpl_random = False,
     ):
-        assert nlanes in [4, 8]
+        assert jesd_lanes in [4, 8]
 
         # Platform ---------------------------------------------------------------------------------
         platform = alinx_axau15.Platform()
@@ -195,29 +198,23 @@ class BaseSoC(SoCMini):
                 sys_clk_freq = sys_clk_freq)
             
         # JESD204B ---------------------------------------------------------------------------------
-
-        if nlanes == 4:
+        if jesd_lanes == 4:
             adc08dj_phy_rx_order    = [3, 0, 2, 1]
             adc08dj_phy_rx_polarity = [0, 0, 0, 0]
-        if nlanes == 8:
+        if jesd_lanes == 8:
             adc08dj_phy_rx_order    = [3, 0, 2, 1, 7, 4, 6, 5]
             adc08dj_phy_rx_polarity = [0, 0, 0, 0, 1, 1, 1, 1]
         adc08dj_refclk_freq   = 156.25e6
         adc08dj_jesd_linerate = 6.2500e9
 
-        framing     = True
-        scrambling  = True
-        stpl_random = False
-
         # JESD Configuration -----------------------------------------------------------------------
-        jesd_lanes = len(adc08dj_phy_rx_order)
 
-        if nlanes == 4:
-            ps_rx = JESD204BPhysicalSettings(l=8, m=4, n=8, np=8)
-        if nlanes == 8:
+        if jesd_lanes == 4:
+            ps_rx = JESD204BPhysicalSettings(l=4, m=4, n=8, np=8)
+        if jesd_lanes == 8:
             ps_rx = JESD204BPhysicalSettings(l=8, m=8, n=8, np=8)
         ts_rx = JESD204BTransportSettings(f=2, s=1, k=32, cs=0)
-        settings_rx = JESD204BSettings(ps_rx, ts_rx, did=0x5a, bid=0x5, framing=framing, scrambling=scrambling)
+        settings_rx = JESD204BSettings(ps_rx, ts_rx, did=0x5a, bid=0x5, framing=jesd_framing, scrambling=jesd_scrambling)
 
         # JESD Clocking (Device) -------------------------------------------------------------------
         userclk_freq = adc08dj_jesd_linerate/40 # 6.25GHz / 40 = 156.25 MHz
@@ -259,7 +256,8 @@ class BaseSoC(SoCMini):
                 tx_buffer_enable = True,
                 rx_buffer_enable = True,
                 tx_polarity      = 0,
-                rx_polarity      = adc08dj_phy_rx_polarity)
+                rx_polarity      = adc08dj_phy_rx_polarity[i],
+            )
             jesd_phy.add_stream_endpoints()
             jesd_phy.add_controls(auto_enable=False)
             jesd_phy.n = i
@@ -282,8 +280,9 @@ class BaseSoC(SoCMini):
         # JESD RX ----------------------------------------------------------------------------------
         self.submodules.jesd_rx_core    = LiteJESD204BCoreRX(jesd_phys_rx, settings_rx,
             converter_data_width = jesd_lanes*8,
-            scrambling           = scrambling,
-            stpl_random          = stpl_random)
+            scrambling           = jesd_scrambling,
+            stpl_random          = jesd_stpl_random,
+        )
         self.submodules.jesd_rx_control = LiteJESD204BCoreControl(self.jesd_rx_core, sys_clk_freq)
         self.jesd_rx_core.register_jsync(platform.request("adc08dj5200rf_sync"))
         self.jesd_rx_core.register_jref(sysref)
