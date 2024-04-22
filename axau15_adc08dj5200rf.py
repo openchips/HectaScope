@@ -220,20 +220,36 @@ class BaseSoC(SoCMini):
         userclk_freq = adc08dj_jesd_linerate/40 # 6.25GHz / 40 = 156.25 MHz
         self.cd_jesd = ClockDomain()
 
-        refclk_pads = platform.request("adc08dj5200rf_refclk")
-        refclk      = Signal()
-        refclk_div2 = Signal()
+        refclk_pads      = platform.request("adc08dj5200rf_refclk")
+        refclk           = Signal()
+        refclk_div2      = Signal()
+        refclk_div2_bufg = Signal()
         self.specials += Instance("IBUFDS_GTE4",
             p_REFCLK_HROW_CK_SEL = 0b01,
             i_CEB   = 0,
             i_I     = refclk_pads.p,
             i_IB    = refclk_pads.n,
             o_O     = refclk,
-            o_ODIV2 = refclk_div2)
-
+            o_ODIV2 = refclk_div2,
+        )
+        bufg_gt_ce  = Signal()
+        bufg_gt_clr = Signal()
+        self.specials += Instance("BUFG_GT_SYNC",
+            i_CLK     = refclk_div2,
+            i_CE      = 1,
+            i_CLR     = 0,
+            o_CESYNC  = bufg_gt_ce,
+            o_CLRSYNC = bufg_gt_clr,
+        )
+        self.specials += Instance("BUFG_GT",
+            i_CE  = bufg_gt_ce,
+            i_CLR = bufg_gt_clr,
+            i_I   = refclk_div2,
+            o_O   = refclk_div2_bufg,
+        )
         self.submodules.pll = pll = USPMMCM(speedgrade=-2)
-        pll.register_clkin(refclk_div2, adc08dj_refclk_freq/2)
-        pll.create_clkout(self.cd_jesd, userclk_freq)
+        pll.register_clkin(refclk_div2_bufg, adc08dj_refclk_freq/2)
+        pll.create_clkout(self.cd_jesd, userclk_freq, with_reset=False)
         platform.add_period_constraint(refclk_div2, 1e9/(adc08dj_refclk_freq/2))
 
         # JESD Clocking (SysRef) -------------------------------------------------------------------
