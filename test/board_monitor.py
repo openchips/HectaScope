@@ -29,34 +29,34 @@ def run_board_monitor(csr_csv, port):
         return identifier
 
     def get_phy_tx_polarity(n):
-        return getattr(bus.regs, f"adc08dj_jesd_phy{n}_tx_polarity").read() & 0x1
+        return getattr(bus.regs, f"jesd_phy{n}_tx_polarity").read() & 0x1
 
     def get_phy_tx_enable(n):
-        return getattr(bus.regs, f"adc08dj_jesd_phy{n}_tx_enable").read() & 0x1
+        return getattr(bus.regs, f"jesd_phy{n}_tx_enable").read() & 0x1
 
     def get_phy_tx_ready(n):
-        return getattr(bus.regs, f"adc08dj_jesd_phy{n}_tx_ready").read()  & 0x1
+        return getattr(bus.regs, f"jesd_phy{n}_tx_ready").read()  & 0x1
 
     def get_phy_rx_polarity(n):
-        return getattr(bus.regs, f"adc08dj_jesd_phy{n}_rx_polarity").read() & 0x1
+        return getattr(bus.regs, f"jesd_phy{n}_rx_polarity").read() & 0x1
 
     def get_phy_rx_enable(n):
-        return getattr(bus.regs, f"adc08dj_jesd_phy{n}_rx_enable").read() & 0x1
+        return getattr(bus.regs, f"jesd_phy{n}_rx_enable").read() & 0x1
 
     def get_phy_rx_ready(n):
-        return getattr(bus.regs, f"adc08dj_jesd_phy{n}_rx_ready").read()  & 0x1
+        return getattr(bus.regs, f"jesd_phy{n}_rx_ready").read()  & 0x1
 
     def get_core_tx_enable():
-        return getattr(bus.regs, f"adc08dj_jesd_tx_control_control").read() & 0x1
+        return getattr(bus.regs, f"jesd_tx_control_control").read() & 0x1
 
     def get_core_rx_enable():
-        return getattr(bus.regs, f"adc08dj_jesd_rx_control_control").read() & 0x1
+        return getattr(bus.regs, f"jesd_rx_control_control").read() & 0x1
 
     def get_core_tx_ready():
-        return getattr(bus.regs, f"adc08dj_jesd_tx_control_status").read() & 0x1
+        return getattr(bus.regs, f"jesd_tx_control_status").read() & 0x1
 
     def get_core_rx_ready():
-        return getattr(bus.regs, f"adc08dj_jesd_rx_control_status").read() & 0x1
+        return getattr(bus.regs, f"jesd_rx_control_status").read() & 0x1
 
     # Create JESD Window.
     with dpg.window(label="AXAU15-ADC08DJ5200RF Control/Status"):
@@ -99,15 +99,6 @@ def run_board_monitor(csr_csv, port):
                 dpg.add_checkbox(tag=f"phy_rx_ready{i}")
 
         dpg.add_text("")
-        dpg.add_text("Core TX")
-        with dpg.group(horizontal=True):
-            dpg.add_text("Enable ")
-            dpg.add_checkbox(tag=f"core_tx_enable")
-        with dpg.group(horizontal=True):
-            dpg.add_text("Ready  ")
-            dpg.add_checkbox(tag=f"core_tx_ready")
-
-        dpg.add_text("")
         dpg.add_text("Core RX")
         with dpg.group(horizontal=True):
             dpg.add_text("Enable ")
@@ -121,16 +112,16 @@ def run_board_monitor(csr_csv, port):
         time_last   = 0
         iteration   = 0
         while dpg.is_dearpygui_running():
-            # RefClk.
-            if (iteration%10 == 9):
-                bus.regs.adc08dj_refclk_measurement_latch.write(1)
-                refclk_curr = bus.regs.adc08dj_refclk_measurement_value.read()
-                time_curr   = time.time()
-                refclk      = (refclk_curr - refclk_last)/(time_curr - time_last)
-                time_last   = time_curr
-                dpg.set_value("refclk_freq", f"{refclk/1e6} MHz")
-                refclk_last = refclk_curr
-            iteration += 1
+#            # RefClk.
+#            if (iteration%10 == 9):
+#                bus.regs.adc08dj_refclk_measurement_latch.write(1)
+#                refclk_curr = bus.regs.adc08dj_refclk_measurement_value.read()
+#                time_curr   = time.time()
+#                refclk      = (refclk_curr - refclk_last)/(time_curr - time_last)
+#                time_last   = time_curr
+#                dpg.set_value("refclk_freq", f"{refclk/1e6} MHz")
+#                refclk_last = refclk_curr
+#            iteration += 1
 
             # PHY TX.
             for i in range(4):
@@ -146,9 +137,6 @@ def run_board_monitor(csr_csv, port):
                 dpg.set_value(f"phy_rx_enable{i}", bool(get_phy_rx_enable(i)))
             for i in range(4):
                 dpg.set_value(f"phy_rx_ready{i}", bool(get_phy_rx_ready(i)))
-            # Core TX.
-            dpg.set_value(f"core_tx_enable", bool(get_core_tx_enable()))
-            dpg.set_value(f"core_tx_ready", bool(get_core_tx_ready()))
             # Core RX.
             dpg.set_value(f"core_rx_enable", bool(get_core_rx_enable()))
             dpg.set_value(f"core_rx_ready", bool(get_core_rx_ready()))
