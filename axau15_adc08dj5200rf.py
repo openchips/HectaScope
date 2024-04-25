@@ -7,6 +7,16 @@
 # Copyright (C) 2012-2024 Florent Kermarrec <florent@enjoy-digital.fr>
 # SPDX-License-Identifier: BSD-2-Clause
 
+# Test:
+# - Configure ADC08DJ52000RFEVM with TI's EVM GUI.
+# - ./axau15_adc08dj5200rf.py --build --load
+# - ping 192.168.1.50
+# - litex_server --udp
+# - cd test
+# - ./board_monitor.py
+# - ./test_jesd.py
+# - litescope_cli
+
 import os
 import argparse
 
@@ -290,6 +300,12 @@ class BaseSoC(SoCMini):
                 rx_buffer_enable = True,
                 tx_polarity      = 0,
                 rx_polarity      = adc08dj_phy_rx_polarity[i],
+                tx_clk           = None if (i == 0) else jesd_phys[0].cd_tx.clk,
+                rx_clk           = None if (i == 0) else jesd_phys[0].cd_rx.clk,
+            )
+            jesd_phy.gth_params.update(
+                p_RX_SUM_IREF_TUNE = 0b1001,
+                i_RXLPMEN          = 0b0,
             )
             jesd_phy.add_stream_endpoints()
             jesd_phy.add_controls(auto_enable=False)
