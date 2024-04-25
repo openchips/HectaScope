@@ -179,7 +179,7 @@ class _CRG(LiteXModule):
 # BaseSoC ------------------------------------------------------------------------------------------
 
 class BaseSoC(SoCMini):
-    def __init__(self, sys_clk_freq=int(125e6),
+    def __init__(self, sys_clk_freq=int(175e6),
         with_led_chaser  = True,
         with_pcie        = False,
         jesd_lanes       = 4,
@@ -400,7 +400,7 @@ def main():
     parser = argparse.ArgumentParser(description="FastScope Test SoC on AXAU15.")
     parser.add_argument("--build",           action ="store_true",      help="Build bitstream.")
     parser.add_argument("--load",            action ="store_true",      help="Load bitstream.")
-    parser.add_argument("--sys-clk-freq",    default=125e6, type=float, help="System clock frequency.")
+    parser.add_argument("--sys-clk-freq",    default=175e6, type=float, help="System clock frequency.")
     parser.add_argument("--driver",          action="store_true",       help="Generate LitePCIe driver.")
     args = parser.parse_args()
 
