@@ -342,7 +342,7 @@ class BaseSoC(SoCMini):
         self.analyzer = LiteScopeAnalyzer(analyzer_signals,
             depth        = depth,
             clock_domain = "jesd",
-            csr_csv      = "analyzer.csv",
+            csr_csv      = "test/analyzer.csv",
             register     = True,
         )
 
@@ -361,7 +361,7 @@ def main():
 	)
     soc.add_jesd_rx_probe()
 
-    builder = Builder(soc, csr_csv="csr.csv")
+    builder = Builder(soc, csr_csv="test/csr.csv")
     if args.build:
         builder.build()
 
