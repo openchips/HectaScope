@@ -36,7 +36,7 @@ bus.regs.jesd_phy3_rx_enable.write(1)
 time.sleep(1)
 
 print("Enable JESD RX Core")
-bus.regs.jesd_rx_control_control.write(1)
+bus.regs.jesd_rx_control_control.write(1 | (1 << 8)) # FIXME: Disable ILAS Check for now, need to check parameters.
 time.sleep(1)
 
 # # #
