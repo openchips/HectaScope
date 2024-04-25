@@ -24,6 +24,8 @@ from litex.soc.integration.soc_core import *
 from litex.soc.integration.builder import *
 from litex.soc.cores.led import LedChaser
 
+from liteeth.phy.usrgmii import LiteEthPHYRGMII
+
 from liteiclink.serdes.gth4_ultrascale import GTH4QuadPLL, GTH4
 
 from litepcie.phy.usppciephy import USPPCIEPHY
@@ -144,6 +146,7 @@ class _CRG(LiteXModule):
     def __init__(self, platform, sys_clk_freq):
         self.rst       = Signal()
         self.cd_sys    = ClockDomain()
+        self.cd_idelay = ClockDomain()
 
         # # #
 
@@ -155,7 +158,11 @@ class _CRG(LiteXModule):
         self.comb += pll.reset.eq(self.rst)
         pll.register_clkin(clk200, 200e6)
         pll.create_clkout(self.cd_sys, sys_clk_freq, with_reset=False)
+        pll.create_clkout(self.cd_idelay, 200e6)
         platform.add_false_path_constraints(self.cd_sys.clk, pll.clkin) # Ignore sys_clk to pll.clkin path created by SoC's rst.
+
+        # IDelayCtrl.
+        self.idelayctrl = USIDELAYCTRL(cd_ref=self.cd_idelay, cd_sys=self.cd_sys)
 
 # BaseSoC ------------------------------------------------------------------------------------------
 
@@ -182,6 +189,16 @@ class BaseSoC(SoCMini):
 
         # UARTBone ---------------------------------------------------------------------------------
         self.add_uartbone()
+
+        # Etherbone --------------------------------------------------------------------------------
+        self.ethphy = LiteEthPHYRGMII(
+            clock_pads = self.platform.request("eth_clocks"),
+            pads       = self.platform.request("eth"),
+            tx_delay   = 1e-9,
+            rx_delay   = 1e-9,
+            usp        = True
+        )
+        self.add_etherbone(phy=self.ethphy, ip_address="192.168.1.50")
 
         # PCIe -------------------------------------------------------------------------------------
         if with_pcie:
