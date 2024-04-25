@@ -112,16 +112,16 @@ def run_board_monitor(csr_csv, port):
         time_last   = 0
         iteration   = 0
         while dpg.is_dearpygui_running():
-#            # RefClk.
-#            if (iteration%10 == 9):
-#                bus.regs.adc08dj_refclk_measurement_latch.write(1)
-#                refclk_curr = bus.regs.adc08dj_refclk_measurement_value.read()
-#                time_curr   = time.time()
-#                refclk      = (refclk_curr - refclk_last)/(time_curr - time_last)
-#                time_last   = time_curr
-#                dpg.set_value("refclk_freq", f"{refclk/1e6} MHz")
-#                refclk_last = refclk_curr
-#            iteration += 1
+            # RefClk.
+            if (iteration%10 == 9):
+                bus.regs.refclk_measurement_latch.write(1)
+                refclk_curr = bus.regs.refclk_measurement_value.read()
+                time_curr   = time.time()
+                refclk      = (refclk_curr - refclk_last)/(time_curr - time_last)
+                time_last   = time_curr
+                dpg.set_value("refclk_freq", f"{refclk/1e6} MHz")
+                refclk_last = refclk_curr
+            iteration += 1
 
             # PHY TX.
             for i in range(4):
