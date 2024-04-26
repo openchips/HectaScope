@@ -88,12 +88,14 @@ class ADC08DJ5200RFCore(LiteXModule):
         self.specials += DifferentialInput(sysref_pads.p, sysref_pads.n, sysref)
 
         # JESD PHYs --------------------------------------------------------------------------------
-        jesd_pll = GTH4QuadPLL(refclk, adc08dj_refclk_freq, adc08dj_jesd_linerate)
-        self.submodules += jesd_pll
-        print(jesd_pll)
-
         self.jesd_phys = jesd_phys = []
         for i in range(adc08dj_jesd_lanes):
+            # GTH4QuadPLL (1 shared per quad).
+            if (i%4 == 0):
+                jesd_pll = GTH4QuadPLL(refclk, adc08dj_refclk_freq, adc08dj_jesd_linerate)
+                self.submodules += jesd_pll
+                print(jesd_pll)
+            # GTH4.
             jesd_tx_pads = platform.request("adc08dj5200rf_jesd_tx", i)
             jesd_rx_pads = platform.request("adc08dj5200rf_jesd_rx", i)
             jesd_phy = GTH4(jesd_pll, jesd_tx_pads, jesd_rx_pads, sys_clk_freq,
@@ -103,8 +105,8 @@ class ADC08DJ5200RFCore(LiteXModule):
                 rx_buffer_enable = True,
                 tx_polarity      = 0,
                 rx_polarity      = adc08dj_phy_rx_polarity[i],
-                tx_clk           = None if (i == 0) else jesd_phys[0].cd_tx.clk,
-                rx_clk           = None if (i == 0) else jesd_phys[0].cd_rx.clk,
+                #tx_clk           = None if (i%4 == 0) else jesd_phys[i//4].cd_tx.clk,
+                #rx_clk           = None if (i%4 == 0) else jesd_phys[i//4].cd_rx.clk,
             )
             jesd_phy.gth_params.update(
                 p_RX_SUM_IREF_TUNE = 0b1001,
@@ -127,7 +129,7 @@ class ADC08DJ5200RFCore(LiteXModule):
         jesd_phys_rx_init_done = reduce(and_, [phy.rx_init.done for phy in jesd_phys])
         self.specials += AsyncResetSynchronizer(self.cd_jesd, ~(jesd_phys_tx_init_done & jesd_phys_rx_init_done))
 
-        jesd_phys_rx = [jesd_phys[n] for n in adc08dj_phy_rx_order]
+        jesd_phys_rx = [jesd_phys[adc08dj_phy_rx_order[n]] for n in range(adc08dj_jesd_lanes)]
 
         # JESD RX ----------------------------------------------------------------------------------
         self.submodules.jesd_rx_core    = LiteJESD204BCoreRX(jesd_phys_rx, settings_rx,

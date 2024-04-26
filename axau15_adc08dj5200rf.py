@@ -204,7 +204,8 @@ class BaseSoC(SoCMini):
             self.pcie_phy = USPPCIEPHY(platform, platform.request("pcie_x4"),
                 speed      = "gen3",
                 data_width = 128,
-                bar0_size  = 0x20000)
+                bar0_size  = 0x20000
+            )
             self.add_pcie(phy=self.pcie_phy, ndmas=1)
 
         # Leds -------------------------------------------------------------------------------------
@@ -219,8 +220,8 @@ class BaseSoC(SoCMini):
             adc08dj_refclk_freq     = 156.25e6,
             adc08dj_jesd_lanes      = adc08dj_jesd_lanes,
             adc08dj_jesd_linerate   = 6.25e9,
-            adc08dj_phy_rx_order    = [3, 0, 2, 1, 7, 4, 6, 5][:adc08dj_jesd_lanes], # FIXME: Only keep 8-lanes when tested?
-            adc08dj_phy_rx_polarity = [0, 0, 0, 0, 1, 1, 1, 1][:adc08dj_jesd_lanes], # FIXME: Only keep 8-lanes when tested?
+            adc08dj_phy_rx_order    = [3, 0, 2, 1, 7, 4, 6, 5],
+            adc08dj_phy_rx_polarity = [0, 0, 0, 0, 1, 1, 1, 1],
         )
 
     # Analyzer -------------------------------------------------------------------------------------
