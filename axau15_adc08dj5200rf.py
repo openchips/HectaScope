@@ -175,9 +175,6 @@ class BaseSoC(SoCMini):
         with_led_chaser  = True,
         with_pcie        = False,
         jesd_lanes       = 4,
-        jesd_framing     = True,
-        jesd_scrambling  = True,
-        jesd_stpl_random = False,
     ):
         assert jesd_lanes in [4, 8]
 
@@ -227,9 +224,6 @@ class BaseSoC(SoCMini):
             adc08dj_phy_rx_polarity = [0, 0, 0, 0, 1, 1, 1, 1]
         self.adc08dj = ADC08DJ5200RFCore(platform, sys_clk_freq,
             jesd_lanes              = jesd_lanes,
-            jesd_framing            = jesd_framing,
-            jesd_scrambling         = jesd_scrambling,
-            jesd_stpl_random        = jesd_stpl_random,
             adc08dj_refclk_freq     = 156.25e6,
             adc08dj_jesd_linerate   = 6.25e9,
             adc08dj_phy_rx_order    = adc08dj_phy_rx_order,

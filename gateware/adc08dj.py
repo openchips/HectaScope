@@ -26,11 +26,14 @@ from litejesd204b.core import LiteJESD204BCoreControl
 # ADC08DJ5200RF Core -------------------------------------------------------------------------------
 
 class ADC08DJ5200RFCore(LiteXModule):
-    def __init__(self, platform, sys_clk_freq, jesd_lanes, jesd_framing, jesd_scrambling, jesd_stpl_random,
+    def __init__(self, platform, sys_clk_freq, jesd_lanes,
         adc08dj_refclk_freq,
         adc08dj_jesd_linerate,
         adc08dj_phy_rx_order,
         adc08dj_phy_rx_polarity,
+        scrambling  = True,
+        stpl_random = True,
+        framing     = False,
     ):
         # JESD Configuration -----------------------------------------------------------------------
         if jesd_lanes == 4:
@@ -38,7 +41,7 @@ class ADC08DJ5200RFCore(LiteXModule):
         if jesd_lanes == 8:
             ps_rx = JESD204BPhysicalSettings(l=8, m=8, n=8, np=8)
         ts_rx = JESD204BTransportSettings(f=2, s=1, k=32, cs=0)
-        settings_rx = JESD204BSettings(ps_rx, ts_rx, did=0x5a, bid=0x5, framing=jesd_framing, scrambling=jesd_scrambling)
+        settings_rx = JESD204BSettings(ps_rx, ts_rx, did=0x5a, bid=0x5, framing=framing, scrambling=scrambling)
 
         # JESD Clocking (Device) -------------------------------------------------------------------
         userclk_freq = adc08dj_jesd_linerate/40 # 6.25GHz / 40 = 156.25 MHz
@@ -128,8 +131,8 @@ class ADC08DJ5200RFCore(LiteXModule):
         # JESD RX ----------------------------------------------------------------------------------
         self.submodules.jesd_rx_core    = LiteJESD204BCoreRX(jesd_phys_rx, settings_rx,
             converter_data_width = jesd_lanes*8,
-            scrambling           = jesd_scrambling,
-            stpl_random          = jesd_stpl_random,
+            scrambling           = scrambling,
+            stpl_random          = stpl_random,
         )
         self.submodules.jesd_rx_control = LiteJESD204BCoreControl(self.jesd_rx_core, sys_clk_freq)
         self.jesd_rx_core.register_jsync(platform.request("adc08dj5200rf_sync"))
