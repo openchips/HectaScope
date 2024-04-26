@@ -162,7 +162,7 @@ class _CRG(LiteXModule):
         self.comb += pll.reset.eq(self.rst)
         pll.register_clkin(clk200, 200e6)
         pll.create_clkout(self.cd_sys, sys_clk_freq, with_reset=False)
-        pll.create_clkout(self.cd_idelay, 200e6)
+        pll.create_clkout(self.cd_idelay, 300e6)
         platform.add_false_path_constraints(self.cd_sys.clk, pll.clkin) # Ignore sys_clk to pll.clkin path created by SoC's rst.
 
         # IDelayCtrl.
@@ -171,7 +171,7 @@ class _CRG(LiteXModule):
 # BaseSoC ------------------------------------------------------------------------------------------
 
 class BaseSoC(SoCMini):
-    def __init__(self, sys_clk_freq=int(175e6),
+    def __init__(self, sys_clk_freq=int(150e6),
         with_led_chaser    = True,
         with_pcie          = False,
         adc08dj_jesd_lanes = 4,
@@ -249,7 +249,7 @@ def main():
     parser = argparse.ArgumentParser(description="FastScope Test SoC on AXAU15.")
     parser.add_argument("--build",           action ="store_true",      help="Build bitstream.")
     parser.add_argument("--load",            action ="store_true",      help="Load bitstream.")
-    parser.add_argument("--sys-clk-freq",    default=175e6, type=float, help="System clock frequency.")
+    parser.add_argument("--sys-clk-freq",    default=150e6, type=float, help="System clock frequency.")
     parser.add_argument("--driver",          action="store_true",       help="Generate LitePCIe driver.")
     args = parser.parse_args()
 
