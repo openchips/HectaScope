@@ -121,7 +121,7 @@ def run_board_monitor(csr_csv, port):
         while dpg.is_dearpygui_running():
             # RefClk.
             if (iteration%10 == 9):
-                bus.regs.refclk_measurement_latch.write(1)
+                bus.regs.adc08dj_refclk_measurement_latch.write(1)
                 refclk_curr = bus.regs.adc08dj_refclk_measurement_value.read()
                 time_curr   = time.time()
                 refclk      = (refclk_curr - refclk_last)/(time_curr - time_last)
