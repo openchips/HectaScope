@@ -174,7 +174,6 @@ class BaseSoC(SoCMini):
     def __init__(self, sys_clk_freq=int(150e6),
         with_led_chaser    = True,
         with_pcie          = False,
-        adc08dj_jesd_lanes = 4,
     ):
         # Platform ---------------------------------------------------------------------------------
         platform = alinx_axau15.Platform()
@@ -215,10 +214,9 @@ class BaseSoC(SoCMini):
                 sys_clk_freq = sys_clk_freq)
             
         # ADC08DJ5200RF ----------------------------------------------------------------------------
-        assert adc08dj_jesd_lanes in [4, 8]
         self.adc08dj = ADC08DJ5200RFCore(platform, sys_clk_freq,
             adc08dj_refclk_freq     = 156.25e6,
-            adc08dj_jesd_lanes      = adc08dj_jesd_lanes,
+            adc08dj_jesd_lanes      = 8,
             adc08dj_jesd_linerate   = 6.25e9,
             adc08dj_phy_rx_order    = [3, 0, 2, 1, 7, 4, 6, 5],
             adc08dj_phy_rx_polarity = [0, 0, 0, 0, 1, 1, 1, 1],

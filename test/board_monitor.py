@@ -76,33 +76,33 @@ def run_board_monitor(csr_csv, port):
             dpg.add_text(" - MHz", tag=f"refclk_freq")
 
         dpg.add_text("")
-        dpg.add_text("PHY TX    0   1   2   3")
+        dpg.add_text("PHY TX    0   1   2   3   4   5   6   7")
         with dpg.group(horizontal=True):
             dpg.add_text("Polarity ")
-            for i in range(4):
+            for i in range(8):
                 dpg.add_checkbox(tag=f"phy_tx_polarity{i}")
         with dpg.group(horizontal=True):
             dpg.add_text("Enable   ")
-            for i in range(4):
+            for i in range(8):
                 dpg.add_checkbox(tag=f"phy_tx_enable{i}")
         with dpg.group(horizontal=True):
             dpg.add_text("Ready    ")
-            for i in range(4):
+            for i in range(8):
                 dpg.add_checkbox(tag=f"phy_tx_ready{i}")
 
         dpg.add_text("")
-        dpg.add_text("PHY RX    0   1   2   3")
+        dpg.add_text("PHY RX    0   1   2   3   4   5   6   7")
         with dpg.group(horizontal=True):
             dpg.add_text("Polarity ")
-            for i in range(4):
+            for i in range(8):
                 dpg.add_checkbox(tag=f"phy_rx_polarity{i}")
         with dpg.group(horizontal=True):
             dpg.add_text("Enable   ")
-            for i in range(4):
+            for i in range(8):
                 dpg.add_checkbox(tag=f"phy_rx_enable{i}")
         with dpg.group(horizontal=True):
             dpg.add_text("Ready    ")
-            for i in range(4):
+            for i in range(8):
                 dpg.add_checkbox(tag=f"phy_rx_ready{i}")
 
         dpg.add_text("")
@@ -131,18 +131,18 @@ def run_board_monitor(csr_csv, port):
             iteration += 1
 
             # PHY TX.
-            for i in range(4):
+            for i in range(8):
                 dpg.set_value(f"phy_tx_polarity{i}", bool(get_phy_tx_polarity(i)))
-            for i in range(4):
+            for i in range(8):
                 dpg.set_value(f"phy_tx_enable{i}", bool(get_phy_tx_enable(i)))
-            for i in range(4):
+            for i in range(8):
                 dpg.set_value(f"phy_tx_ready{i}", bool(get_phy_tx_ready(i)))
             # PHY RX.
-            for i in range(4):
+            for i in range(8):
                 dpg.set_value(f"phy_rx_polarity{i}", bool(get_phy_rx_polarity(i)))
-            for i in range(4):
+            for i in range(8):
                 dpg.set_value(f"phy_rx_enable{i}", bool(get_phy_rx_enable(i)))
-            for i in range(4):
+            for i in range(8):
                 dpg.set_value(f"phy_rx_ready{i}", bool(get_phy_rx_ready(i)))
             # Core RX.
             dpg.set_value(f"core_rx_enable", bool(get_core_rx_enable()))

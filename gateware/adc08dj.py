@@ -105,8 +105,8 @@ class ADC08DJ5200RFCore(LiteXModule):
                 rx_buffer_enable = True,
                 tx_polarity      = 0,
                 rx_polarity      = adc08dj_phy_rx_polarity[i],
-                #tx_clk           = None if (i%4 == 0) else jesd_phys[i//4].cd_tx.clk,
-                #rx_clk           = None if (i%4 == 0) else jesd_phys[i//4].cd_rx.clk,
+                tx_clk           = None if (i == 0) else jesd_phys[0].cd_tx.clk,
+                rx_clk           = None if (i == 0) else jesd_phys[0].cd_rx.clk,
             )
             jesd_phy.add_stream_endpoints()
             jesd_phy.add_controls(auto_enable=False)
