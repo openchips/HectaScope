@@ -216,18 +216,12 @@ class BaseSoC(SoCMini):
                 sys_clk_freq = sys_clk_freq)
             
         # JESD204B ---------------------------------------------------------------------------------
-        if jesd_lanes == 4:
-            adc08dj_phy_rx_order    = [3, 0, 2, 1]
-            adc08dj_phy_rx_polarity = [0, 0, 0, 0]
-        if jesd_lanes == 8:
-            adc08dj_phy_rx_order    = [3, 0, 2, 1, 7, 4, 6, 5]
-            adc08dj_phy_rx_polarity = [0, 0, 0, 0, 1, 1, 1, 1]
         self.adc08dj = ADC08DJ5200RFCore(platform, sys_clk_freq,
             jesd_lanes              = jesd_lanes,
             adc08dj_refclk_freq     = 156.25e6,
             adc08dj_jesd_linerate   = 6.25e9,
-            adc08dj_phy_rx_order    = adc08dj_phy_rx_order,
-            adc08dj_phy_rx_polarity = adc08dj_phy_rx_polarity,
+            adc08dj_phy_rx_order    = [3, 0, 2, 1, 7, 4, 6, 5][:jesd_lanes], # FIXME: Only keep 8-lanes when tested?
+            adc08dj_phy_rx_polarity = [0, 0, 0, 0, 1, 1, 1, 1][:jesd_lanes], # FIXME: Only keep 8-lanes when tested?
         )
 
     # Analyzer -------------------------------------------------------------------------------------
