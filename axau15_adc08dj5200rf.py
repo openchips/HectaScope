@@ -225,10 +225,7 @@ class BaseSoC(SoCMini):
         if jesd_lanes == 8:
             adc08dj_phy_rx_order    = [3, 0, 2, 1, 7, 4, 6, 5]
             adc08dj_phy_rx_polarity = [0, 0, 0, 0, 1, 1, 1, 1]
-        self.adc08dj = ADC08DJ5200RFCore(
-            platform                = platform, # FIXME: Use LiteXContext?
-            soc                     = self,     # FIXME: Use LiteXContext?
-            sys_clk_freq            = sys_clk_freq,
+        self.adc08dj = ADC08DJ5200RFCore(platform, sys_clk_freq,
             jesd_lanes              = jesd_lanes,
             jesd_framing            = jesd_framing,
             jesd_scrambling         = jesd_scrambling,

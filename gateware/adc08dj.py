@@ -26,7 +26,7 @@ from litejesd204b.core import LiteJESD204BCoreControl
 # ADC08DJ5200RF Core -------------------------------------------------------------------------------
 
 class ADC08DJ5200RFCore(LiteXModule):
-    def __init__(self, platform, soc, sys_clk_freq, jesd_lanes, jesd_framing, jesd_scrambling, jesd_stpl_random,
+    def __init__(self, platform, sys_clk_freq, jesd_lanes, jesd_framing, jesd_scrambling, jesd_stpl_random,
         adc08dj_refclk_freq,
         adc08dj_jesd_linerate,
         adc08dj_phy_rx_order,
@@ -113,7 +113,7 @@ class ADC08DJ5200RFCore(LiteXModule):
             platform.add_period_constraint(jesd_phy.cd_tx.clk, 1e9/jesd_phy.tx_clk_freq)
             platform.add_period_constraint(jesd_phy.cd_rx.clk, 1e9/jesd_phy.rx_clk_freq)
             platform.add_false_path_constraints(
-                soc.crg.cd_sys.clk,
+                LiteXContext.top.crg.cd_sys.clk,
                 self.cd_jesd.clk,
                 jesd_phy.cd_tx.clk,
                 jesd_phy.cd_rx.clk)
