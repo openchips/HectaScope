@@ -26,7 +26,7 @@ from litejesd204b.core import LiteJESD204BCoreControl
 # ADC08DJ5200RF Core -------------------------------------------------------------------------------
 
 class ADC08DJ5200RFCore(LiteXModule):
-    def __init__(self, platform, sys_clk_freq, 
+    def __init__(self, platform, sys_clk_freq,
         adc08dj_jesd_lanes,
         adc08dj_refclk_freq,
         adc08dj_jesd_linerate,
@@ -107,10 +107,6 @@ class ADC08DJ5200RFCore(LiteXModule):
                 rx_polarity      = adc08dj_phy_rx_polarity[i],
                 #tx_clk           = None if (i%4 == 0) else jesd_phys[i//4].cd_tx.clk,
                 #rx_clk           = None if (i%4 == 0) else jesd_phys[i//4].cd_rx.clk,
-            )
-            jesd_phy.gth_params.update(
-                p_RX_SUM_IREF_TUNE = 0b1001,
-                i_RXLPMEN          = 0b0,
             )
             jesd_phy.add_stream_endpoints()
             jesd_phy.add_controls(auto_enable=False)
