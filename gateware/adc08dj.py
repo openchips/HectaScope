@@ -26,7 +26,8 @@ from litejesd204b.core import LiteJESD204BCoreControl
 # ADC08DJ5200RF Core -------------------------------------------------------------------------------
 
 class ADC08DJ5200RFCore(LiteXModule):
-    def __init__(self, platform, sys_clk_freq, jesd_lanes,
+    def __init__(self, platform, sys_clk_freq, 
+        adc08dj_jesd_lanes,
         adc08dj_refclk_freq,
         adc08dj_jesd_linerate,
         adc08dj_phy_rx_order,
@@ -36,9 +37,9 @@ class ADC08DJ5200RFCore(LiteXModule):
         framing     = False,
     ):
         # JESD Configuration -----------------------------------------------------------------------
-        if jesd_lanes == 4:
+        if adc08dj_jesd_lanes == 4:
             ps_rx = JESD204BPhysicalSettings(l=4, m=4, n=8, np=8)
-        if jesd_lanes == 8:
+        if adc08dj_jesd_lanes == 8:
             ps_rx = JESD204BPhysicalSettings(l=8, m=8, n=8, np=8)
         ts_rx = JESD204BTransportSettings(f=2, s=1, k=32, cs=0)
         settings_rx = JESD204BSettings(ps_rx, ts_rx, did=0x5a, bid=0x5, framing=framing, scrambling=scrambling)
@@ -92,7 +93,7 @@ class ADC08DJ5200RFCore(LiteXModule):
         print(jesd_pll)
 
         self.jesd_phys = jesd_phys = []
-        for i in range(jesd_lanes):
+        for i in range(adc08dj_jesd_lanes):
             jesd_tx_pads = platform.request("adc08dj5200rf_jesd_tx", i)
             jesd_rx_pads = platform.request("adc08dj5200rf_jesd_rx", i)
             jesd_phy = GTH4(jesd_pll, jesd_tx_pads, jesd_rx_pads, sys_clk_freq,
@@ -130,7 +131,7 @@ class ADC08DJ5200RFCore(LiteXModule):
 
         # JESD RX ----------------------------------------------------------------------------------
         self.submodules.jesd_rx_core    = LiteJESD204BCoreRX(jesd_phys_rx, settings_rx,
-            converter_data_width = jesd_lanes*8,
+            converter_data_width = adc08dj_jesd_lanes*8,
             scrambling           = scrambling,
             stpl_random          = stpl_random,
         )
