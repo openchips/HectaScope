@@ -29,34 +29,34 @@ def run_board_monitor(csr_csv, port):
         return identifier
 
     def get_phy_tx_polarity(n):
-        return getattr(bus.regs, f"jesd_phy{n}_tx_polarity").read() & 0x1
+        return getattr(bus.regs, f"adc08dj_jesd_phy{n}_tx_polarity").read() & 0x1
 
     def get_phy_tx_enable(n):
-        return getattr(bus.regs, f"jesd_phy{n}_tx_enable").read() & 0x1
+        return getattr(bus.regs, f"adc08dj_jesd_phy{n}_tx_enable").read() & 0x1
 
     def get_phy_tx_ready(n):
-        return getattr(bus.regs, f"jesd_phy{n}_tx_ready").read()  & 0x1
+        return getattr(bus.regs, f"adc08dj_jesd_phy{n}_tx_ready").read()  & 0x1
 
     def get_phy_rx_polarity(n):
-        return getattr(bus.regs, f"jesd_phy{n}_rx_polarity").read() & 0x1
+        return getattr(bus.regs, f"adc08dj_jesd_phy{n}_rx_polarity").read() & 0x1
 
     def get_phy_rx_enable(n):
-        return getattr(bus.regs, f"jesd_phy{n}_rx_enable").read() & 0x1
+        return getattr(bus.regs, f"adc08dj_jesd_phy{n}_rx_enable").read() & 0x1
 
     def get_phy_rx_ready(n):
-        return getattr(bus.regs, f"jesd_phy{n}_rx_ready").read()  & 0x1
+        return getattr(bus.regs, f"adc08dj_jesd_phy{n}_rx_ready").read()  & 0x1
 
     def get_core_tx_enable():
-        return getattr(bus.regs, f"jesd_tx_control_control").read() & 0x1
+        return getattr(bus.regs, f"adc08dj_jesd_tx_control_control").read() & 0x1
 
     def get_core_rx_enable():
-        return getattr(bus.regs, f"jesd_rx_control_control").read() & 0x1
+        return getattr(bus.regs, f"adc08dj_jesd_rx_control_control").read() & 0x1
 
     def get_core_tx_ready():
-        return getattr(bus.regs, f"jesd_tx_control_status").read() & 0x1
+        return getattr(bus.regs, f"adc08dj_jesd_tx_control_status").read() & 0x1
 
     def get_core_rx_ready():
-        return getattr(bus.regs, f"jesd_rx_control_status").read() & 0x1
+        return getattr(bus.regs, f"adc08dj_jesd_rx_control_status").read() & 0x1
 
     # Create JESD Window.
     with dpg.window(label="AXAU15-ADC08DJ5200RF Control/Status"):
@@ -115,7 +115,7 @@ def run_board_monitor(csr_csv, port):
             # RefClk.
             if (iteration%10 == 9):
                 bus.regs.refclk_measurement_latch.write(1)
-                refclk_curr = bus.regs.refclk_measurement_value.read()
+                refclk_curr = bus.regs.adc08dj_refclk_measurement_value.read()
                 time_curr   = time.time()
                 refclk      = (refclk_curr - refclk_last)/(time_curr - time_last)
                 time_last   = time_curr
