@@ -31,12 +31,16 @@ from litex.soc.cores.clock import *
 from litex.soc.integration.soc_core import *
 from litex.soc.integration.builder import *
 from litex.soc.interconnect.csr import *
+from litex.soc.interconnect import stream
 from litex.soc.cores.led import LedChaser
 
 from liteeth.phy.usrgmii import LiteEthPHYRGMII
 
 from litepcie.phy.usppciephy import USPPCIEPHY
 from litepcie.software import generate_litepcie_software
+
+from litedram.modules import MT40A512M16
+from litedram.phy import usddrphy
 
 from litescope import LiteScopeAnalyzer
 
@@ -150,8 +154,8 @@ class _CRG(LiteXModule):
     def __init__(self, platform, sys_clk_freq):
         self.rst       = Signal()
         self.cd_sys    = ClockDomain()
+        self.cd_sys4x  = ClockDomain()
         self.cd_idelay = ClockDomain()
-
         # # #
 
         # Clk.
@@ -162,6 +166,7 @@ class _CRG(LiteXModule):
         self.comb += pll.reset.eq(self.rst)
         pll.register_clkin(clk200, 200e6)
         pll.create_clkout(self.cd_sys, sys_clk_freq, with_reset=False)
+        pll.create_clkout(self.cd_sys4x,  4*sys_clk_freq)
         pll.create_clkout(self.cd_idelay, 300e6)
         platform.add_false_path_constraints(self.cd_sys.clk, pll.clkin) # Ignore sys_clk to pll.clkin path created by SoC's rst.
 
@@ -171,9 +176,12 @@ class _CRG(LiteXModule):
 # BaseSoC ------------------------------------------------------------------------------------------
 
 class BaseSoC(SoCMini):
-    def __init__(self, sys_clk_freq=int(150e6),
+    def __init__(self, sys_clk_freq=int(300e6),
         with_led_chaser    = True,
-        with_pcie          = False,
+        with_pcie          = True,
+        without_ram        = True,
+        pcie_speed         = "gen4",
+        **kwargs
     ):
         # Platform ---------------------------------------------------------------------------------
         platform = alinx_axau15.Platform()
@@ -183,7 +191,7 @@ class BaseSoC(SoCMini):
         self.crg = _CRG(platform, sys_clk_freq)
 
         # SoCMini ----------------------------------------------------------------------------------
-        SoCMini.__init__(self, platform, sys_clk_freq, ident="FastScope Test SoC on AXAU15.")
+        SoCMini.__init__(self, platform, sys_clk_freq, ident="FastScope Test SoC on AXAU15.", **kwargs)
 
         # UARTBone ---------------------------------------------------------------------------------
         self.add_uartbone()
@@ -198,14 +206,35 @@ class BaseSoC(SoCMini):
         )
         self.add_etherbone(phy=self.ethphy, ip_address="192.168.1.50")
 
+        # DDR4 SDRAM -------------------------------------------------------------------------------
+        if not without_ram and not self.integrated_main_ram_size:
+            self.ddrphy = usddrphy.USPDDRPHY(platform.request("ddram"),
+                memtype          = "DDR4",
+                sys_clk_freq     = sys_clk_freq,
+                iodelay_clk_freq = 500e6)
+            self.add_sdram("sdram",
+                phy           = self.ddrphy,
+                module        = MT40A512M16(sys_clk_freq, "1:4"),
+                size          = 0x40000000,
+                l2_cache_size = kwargs.get("l2_size", 8192)
+            )
+
         # PCIe -------------------------------------------------------------------------------------
         if with_pcie:
             self.pcie_phy = USPPCIEPHY(platform, platform.request("pcie_x4"),
-                speed      = "gen3",
-                data_width = 128,
-                bar0_size  = 0x20000
+                speed         = pcie_speed,
+                data_width    = {"gen3": 128, "gen4": 256}[pcie_speed],
+                ip_name       = "pcie4c_uscale_plus",
+                bar0_size     = 0x100000,
             )
-            self.add_pcie(phy=self.pcie_phy, ndmas=1)
+            self.add_pcie(phy=self.pcie_phy, ndmas=1, address_width=64, dma_buffering_depth=2**8, max_pending_requests=16)
+
+            # Set manual locations to avoid Vivado to remap lanes to X0Y4, X0Y5, X0Y6, X0Y7.
+            platform.toolchain.pre_placement_commands.append("reset_property LOC [get_cells -hierarchical -filter {{NAME=~*pcie_usp_i/*GTHE4_CHANNEL_PRIM_INST}}]")
+            platform.toolchain.pre_placement_commands.append("set_property LOC GTHE4_CHANNEL_X0Y0 [get_cells -hierarchical -filter {{NAME=~*pcie_usp_i/*gthe4_channel_gen.gen_gthe4_channel_inst[0].GTHE4_CHANNEL_PRIM_INST}}]")
+            platform.toolchain.pre_placement_commands.append("set_property LOC GTHE4_CHANNEL_X0Y1 [get_cells -hierarchical -filter {{NAME=~*pcie_usp_i/*gthe4_channel_gen.gen_gthe4_channel_inst[1].GTHE4_CHANNEL_PRIM_INST}}]")
+            platform.toolchain.pre_placement_commands.append("set_property LOC GTHE4_CHANNEL_X0Y2 [get_cells -hierarchical -filter {{NAME=~*pcie_usp_i/*gthe4_channel_gen.gen_gthe4_channel_inst[2].GTHE4_CHANNEL_PRIM_INST}}]")
+            platform.toolchain.pre_placement_commands.append("set_property LOC GTHE4_CHANNEL_X0Y3 [get_cells -hierarchical -filter {{NAME=~*pcie_usp_i/*gthe4_channel_gen.gen_gthe4_channel_inst[3].GTHE4_CHANNEL_PRIM_INST}}]")
 
         # Leds -------------------------------------------------------------------------------------
         if with_led_chaser:
@@ -221,6 +250,46 @@ class BaseSoC(SoCMini):
             adc08dj_phy_rx_order    = [3, 0, 2, 1, 7, 4, 6, 5],
             adc08dj_phy_rx_polarity = [0, 0, 0, 0, 1, 1, 1, 1],
         )
+        
+        if with_pcie:
+            #print(self.adc08dj.jesd_rx_core)
+
+            self.sample = sample = Signal(256)
+            # Converters' samples for a frame
+            for j in range(8):
+                #for i in range(8):
+                converter_data = getattr(self.adc08dj.jesd_rx_core.source, "converter"+str(j))
+                self.comb += sample[
+                    (j*32):
+                    (j*32-1+32)].eq(converter_data)
+                    
+            
+            self.comb += self.pcie_dma0.sink.valid.eq(self.adc08dj.jesd_rx_core.ready)
+            self.sync += If(self.pcie_dma0.sink.valid, self.pcie_dma0.sink.data.eq(sample))
+
+            #self.sync += If(self.pcie_dma0.sink.valid, self.pcie_dma0.sink.data.eq(self.adc08dj.jesd_rx_core.source.data))
+
+            # getattr(self.adc08dj.jesd_rx_core.source, "converter0")
+                
+            # print(self.adc08dj.jesd_rx_core.source)
+            #converter0 = getattr(self.adc08dj.jesd_rx_core.source, "converter0")
+            #print(converter0)
+            #    # Gate/Data-Width Converter.
+            # self.submodules.gate = stream.Gate([("data", 64)], sink_ready_when_disabled=True)
+            # self.submodules.conv = stream.Converter(64, {"gen3": 128, "gen4": 256}[pcie_speed])
+            # self.comb += self.gate.enable.eq(1)
+
+            # # Pipeline.
+            # self.submodules += stream.Pipeline(
+            #     self.adc08dj.jesd_rx_core,
+            #     self.gate,
+            #     self.conv,
+            #     self.pcie_dma0.sink
+            # )
+            #stream.Converter(64, {"gen3": 128, "gen4": 256}[pcie_speed])
+            #self.comb += self.pcie_dma0.sink
+            #self.comb += self.pcie_dma0.sink.
+
 
     # Analyzer -------------------------------------------------------------------------------------
 
@@ -228,12 +297,14 @@ class BaseSoC(SoCMini):
         analyzer_signals = [
             self.adc08dj.jesd_rx_core.jsync,
             self.adc08dj.jesd_rx_core.jref,
+            self.sample
         ]
         for link in self.adc08dj.jesd_rx_core.links:
             analyzer_signals.append(link.aligner.source)
             analyzer_signals.append(link.fsm)
             analyzer_signals.append(link.ilas.valid)
             analyzer_signals.append(link.ilas.done)
+            
         analyzer_signals.append(self.adc08dj.jesd_rx_core.transport.source)
         self.analyzer = LiteScopeAnalyzer(analyzer_signals,
             depth        = depth,
@@ -248,12 +319,17 @@ def main():
     parser = argparse.ArgumentParser(description="FastScope Test SoC on AXAU15.")
     parser.add_argument("--build",           action ="store_true",      help="Build bitstream.")
     parser.add_argument("--load",            action ="store_true",      help="Load bitstream.")
-    parser.add_argument("--sys-clk-freq",    default=150e6, type=float, help="System clock frequency.")
+    parser.add_argument("--flash",           action ="store_true",      help="Flash bitstream.")
+    parser.add_argument("--sys-clk-freq",    default=300e6, type=float, help="System clock frequency.")
     parser.add_argument("--driver",          action="store_true",       help="Generate LitePCIe driver.")
+    parser.add_argument("--with-pcie",       action="store_true",       help="Enable PCIe support.")        
+    parser.add_argument("--pcie-speed",      default="gen4",            help="PCIe speed.", choices=["gen3", "gen4"])
     args = parser.parse_args()
 
     soc = BaseSoC(
         sys_clk_freq = args.sys_clk_freq,
+        with_pcie    = args.with_pcie,
+        pcie_speed   = args.pcie_speed,
 	)
     soc.add_jesd_rx_probe()
 
@@ -267,6 +343,11 @@ def main():
     if args.load:
         prog = soc.platform.create_programmer()
         prog.load_bitstream(builder.get_bitstream_filename(mode="sram"))
+
+    if args.flash:
+        prog = soc.platform.create_programmer()
+        prog.load_bitstream(builder.get_bitstream_filename(mode="flash"))
+
 
 if __name__ == "__main__":
     main()
