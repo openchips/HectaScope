@@ -1,0 +1,1 @@
+savedcmd_/home/johnsimons/litex/FASTSCOPE/build/alinx_axau15/driver/rdma/software/kernel/Module.symvers :=  scripts/mod/modpost -M -m -a  -w    -o /home/johnsimons/litex/FASTSCOPE/build/alinx_axau15/driver/rdma/software/kernel/Module.symvers -T /home/johnsimons/litex/FASTSCOPE/build/alinx_axau15/driver/rdma/software/kernel/modules.order -i Module.symvers -e 
