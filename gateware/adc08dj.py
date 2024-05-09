@@ -129,7 +129,7 @@ class ADC08DJ5200RFCore(LiteXModule):
 
         # JESD RX ----------------------------------------------------------------------------------
         self.submodules.jesd_rx_core    = LiteJESD204BCoreRX(jesd_phys_rx, settings_rx,
-            converter_data_width = adc08dj_jesd_lanes*8,
+            converter_data_width = 8*4, # 8 bit times 4 samples 
             scrambling           = scrambling,
             stpl_random          = stpl_random,
         )
