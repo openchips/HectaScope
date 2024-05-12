@@ -35,7 +35,19 @@ bus.regs.adc08dj_jesd_phy5_rx_enable.write(0)
 bus.regs.adc08dj_jesd_phy6_rx_enable.write(0)
 bus.regs.adc08dj_jesd_phy7_rx_enable.write(0)
 
+bus.regs.adc08dj_jesd_phy4_rx_polarity.write(1)
+bus.regs.adc08dj_jesd_phy5_rx_polarity.write(1)
+bus.regs.adc08dj_jesd_phy6_rx_polarity.write(1)
+bus.regs.adc08dj_jesd_phy7_rx_polarity.write(1)
+
 bus.regs.adc08dj_jesd_rx_control_control.write(0)
+time.sleep(1)
+
+print("Set JESD RX POLARITYs.")
+bus.regs.adc08dj_jesd_phy4_rx_polarity.write(1)
+bus.regs.adc08dj_jesd_phy5_rx_polarity.write(1)
+bus.regs.adc08dj_jesd_phy6_rx_polarity.write(1)
+bus.regs.adc08dj_jesd_phy7_rx_polarity.write(1)
 time.sleep(1)
 
 print("Enable JESD TX PHYs.")
