@@ -36,6 +36,8 @@ class ADC08DJ5200RFCore(LiteXModule):
         stpl_random = True,
         framing     = False,
     ):
+        self.sample = sample = Signal(255)
+
         # JESD Configuration -----------------------------------------------------------------------
         if adc08dj_jesd_lanes == 4:
             ps_rx = JESD204BPhysicalSettings(l=4, m=4, n=8, np=8)
@@ -142,6 +144,24 @@ class ADC08DJ5200RFCore(LiteXModule):
         self.comb += self.jesd_link_status.eq(
             (self.jesd_rx_core.enable & self.jesd_rx_core.jsync) &
             (self.jesd_rx_core.enable & self.jesd_rx_core.jsync))
+        
+        # JESD lane mapping -------------------------------------------------------------------------
+        sorted_samples = []
+        for sample_i in [3,2,1,0]:
+            print(sample_i)
+            # Converters' samples for a frame
+            sorted_samples = []
+            for i in [0, 4, 1, 5, 2, 6, 3, 7]:
+                converter_data = getattr(self.jesd_rx_core.source, "converter"+str(i))
+                current_sample = converter_data[sample_i*8:((sample_i+1)*8)]
+                sorted_samples.append(current_sample)
+
+            for i in [7,6,5,4,3,2,1,0]:
+                start = (sample_i*64)+(i*8)
+                end = ((sample_i+1)*64)-((8-1-i)*8)
+                print("start: " + str(start))
+                print("end: " + str(end))
+                self.comb += sample[start:end].eq(sorted_samples.pop())
 
         # Clk Measurements -------------------------------------------------------------------------
 

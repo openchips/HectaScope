@@ -177,8 +177,9 @@ class _CRG(LiteXModule):
 
 class BaseSoC(SoCMini):
     def __init__(self, sys_clk_freq=int(300e6),
-        with_led_chaser    = True,
-        with_pcie          = True,
+        with_led_chaser    = True,        
+        with_pcie          = False,
+        with_remap         = True,
         without_ram        = True,
         pcie_speed         = "gen4",
         **kwargs
@@ -251,21 +252,46 @@ class BaseSoC(SoCMini):
             adc08dj_phy_rx_polarity = [0, 0, 0, 0, 1, 1, 1, 1],
         )
         
-        if with_pcie:
+        if with_remap or with_pcie:
             #print(self.adc08dj.jesd_rx_core)
 
-            self.sample = sample = Signal(256)
-            # Converters' samples for a frame
-            for j in range(8):
-                #for i in range(8):
-                converter_data = getattr(self.adc08dj.jesd_rx_core.source, "converter"+str(j))
-                self.comb += sample[
-                    (j*32):
-                    (j*32-1+32)].eq(converter_data)
+            # self.sample = sample = Signal(256)
+
+            # # Converters' samples for a frame
+            # frame_nibbles = []
+            # for sample_i in range(4):
+            #     print(sample_i)
+            #     # Converters' samples for a frame
+            #     frame_nibbles = []
+            #     for i in [0, 4, 1, 5, 2, 6, 3, 7]:
+            #         converter_data = getattr(self.adc08dj.jesd_rx_core.source, "converter"+str(i))
+            #         current_sample = converter_data[sample_i*8:((sample_i+1)*8)]
+            #         frame_nibbles.append(current_sample)
+
+            #     for i in range(8):
+            #         start = (sample_i*64)+(i*8)
+            #         end = ((sample_i+1)*64)-((8-1-i)*8)
+            #         print("start: " + str(start))
+            #         print("end: " + str(end))
+            #         self.comb += sample[start:end].eq(frame_nibbles.pop())
                     
-            
-            self.comb += self.pcie_dma0.sink.valid.eq(self.adc08dj.jesd_rx_core.ready)
-            self.sync += If(self.pcie_dma0.sink.valid, self.pcie_dma0.sink.data.eq(sample))
+                #exit()
+                # self.comb += sample[j*8+0].eq(converter_data[0])   #S0
+                # self.comb += sample[j*8+2].eq(converter_data[1][j])   #S2              
+                # self.comb += sample[j*8+4].eq(converter_data[2][j])   #S4                 
+                # self.comb += sample[j*8+6].eq(converter_data[3][j])   #S6                 
+                # self.comb += sample[j*8+1].eq(converter_data[4][j])   #S1                 
+                # self.comb += sample[j*8+3].eq(converter_data[5][j])   #S3                 
+                # self.comb += sample[j*8+5].eq(converter_data[6][j])   #S5                 
+                # self.comb += sample[j*8+7].eq(converter_data[7][j])   #S6                 
+
+                # exit()
+            # print(sample)
+                #self.comb += sample[(i*32):((i+1)*32)].eq(converter_data[0:31])                    
+            # exit()
+            if with_pcie:
+                self.comb += self.pcie_dma0.sink.valid.eq(self.adc08dj.jesd_rx_core.ready)
+                self.sync += If(self.pcie_dma0.sink.valid, self.pcie_dma0.sink.data.eq(self.adc08dj.sample))
 
             #self.sync += If(self.pcie_dma0.sink.valid, self.pcie_dma0.sink.data.eq(self.adc08dj.jesd_rx_core.source.data))
 
@@ -297,7 +323,8 @@ class BaseSoC(SoCMini):
         analyzer_signals = [
             self.adc08dj.jesd_rx_core.jsync,
             self.adc08dj.jesd_rx_core.jref,
-            self.sample
+            self.adc08dj.jesd_rx_core.ready,
+            self.adc08dj.sample
         ]
         for link in self.adc08dj.jesd_rx_core.links:
             analyzer_signals.append(link.aligner.source)
@@ -319,7 +346,6 @@ def main():
     parser = argparse.ArgumentParser(description="FastScope Test SoC on AXAU15.")
     parser.add_argument("--build",           action ="store_true",      help="Build bitstream.")
     parser.add_argument("--load",            action ="store_true",      help="Load bitstream.")
-    parser.add_argument("--flash",           action ="store_true",      help="Flash bitstream.")
     parser.add_argument("--sys-clk-freq",    default=300e6, type=float, help="System clock frequency.")
     parser.add_argument("--driver",          action="store_true",       help="Generate LitePCIe driver.")
     parser.add_argument("--with-pcie",       action="store_true",       help="Enable PCIe support.")        
@@ -343,11 +369,6 @@ def main():
     if args.load:
         prog = soc.platform.create_programmer()
         prog.load_bitstream(builder.get_bitstream_filename(mode="sram"))
-
-    if args.flash:
-        prog = soc.platform.create_programmer()
-        prog.load_bitstream(builder.get_bitstream_filename(mode="flash"))
-
 
 if __name__ == "__main__":
     main()
